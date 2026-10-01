@@ -8,12 +8,13 @@ import (
 	"github.com/yukkat/go-metrics-api/internal/repository"
 )
 
-func main() {
+func newServer() http.Handler {
 	storage := repository.NewMemStorage()
 	updateHandler := handler.NewUpdateHandler(storage)
 
-	server := http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+	return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		path := req.URL.Path
+
 		if path == "/update" || strings.HasPrefix(path, "/update/") {
 			updateHandler.ServeHTTP(res, req)
 			return
@@ -21,6 +22,10 @@ func main() {
 
 		http.NotFound(res, req)
 	})
+}
+
+func main() {
+	server := newServer()
 
 	if err := http.ListenAndServe(":8080", server); err != nil {
 		panic(err)
