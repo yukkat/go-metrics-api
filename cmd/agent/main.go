@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"net/http"
 	"time"
 	"github.com/yukkat/go-metrics-api/internal/agent"
@@ -9,6 +8,7 @@ import (
 
 var pollInterval = 2 * time.Second
 var timeout = 5 * time.Second
+var host = "http://localhost:8080"
 
 func main() {
     client := &http.Client{
@@ -16,22 +16,7 @@ func main() {
     }
 
     for {
-        metrics := agent.CollectMetrics()
-
-        for _, metric := range metrics {
-            if err := agent.SendMetric(
-                client,
-                "http://localhost:8080",
-                metric,
-            ); err != nil {
-                log.Printf(
-                    "failed to send metric %s: %v",
-                    metric.ID,
-                    err,
-                )
-            }
-        }
-
+        agent.CollectAndSend(client, host)
         time.Sleep(pollInterval)
     }
 }
