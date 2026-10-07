@@ -2,26 +2,25 @@ package main
 
 import (
 	"net/http"
-	"strings"
 
 	"github.com/yukkat/go-metrics-api/internal/handler"
 	"github.com/yukkat/go-metrics-api/internal/repository"
+	"github.com/go-chi/chi/v5"
 )
 
 func newServer() http.Handler {
 	storage := repository.NewMemStorage()
 	updateHandler := handler.NewUpdateHandler(storage)
+	valueHandler := handler.NewValueHandler(storage)
+	allMetricsHandler := handler.NewAllMetricsHandler(storage)
 
-	return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
-		path := req.URL.Path
+	r := chi.NewRouter()
 
-		if path == "/update" || strings.HasPrefix(path, "/update/") {
-			updateHandler.ServeHTTP(res, req)
-			return
-		}
+    r.Get("/", allMetricsHandler.ServeHTTP)
+	r.Post("/update/{type}/{name}/{value}", updateHandler.ServeHTTP)
+	r.Get("/value/{type}/{name}", valueHandler.ServeHTTP)
 
-		http.NotFound(res, req)
-	})
+	return r
 }
 
 func main() {
