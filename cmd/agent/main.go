@@ -8,15 +8,14 @@ import (
 	"github.com/yukkat/go-metrics-api/internal/agent"
 )
 
-var pollInterval = 2 * time.Second
-var timeout = 5 * time.Second
 
 func main() {
     parseFlags()
 
     host := fmt.Sprintf(`http://localhost%s`, flagRunAddr)
+
     client := &http.Client{
-        Timeout: timeout,
+        Timeout: reportInterval,
     }
     fmt.Println(host)
 
