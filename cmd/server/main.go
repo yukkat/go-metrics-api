@@ -27,7 +27,7 @@ func newServer() http.Handler {
 func main() {
 	server := newServer()
 
-	if err := http.ListenAndServe(":8080", server); err != nil {
+	if err := http.ListenAndServe(flagRunAddr, server); err != nil {
 		panic(err)
 	}
 }
