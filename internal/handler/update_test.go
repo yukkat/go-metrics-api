@@ -5,12 +5,16 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/yukkat/go-metrics-api/internal/repository"
 )
 
 func TestUpdateHandler(t *testing.T) {
 	storage := repository.NewMemStorage()
 	handler := NewUpdateHandler(storage)
+
+	r := chi.NewRouter()
+	r.Post("/update/{type}/{name}/{value}", handler.ServeHTTP)
 
 	tests := []struct {
 		name   string
@@ -55,7 +59,7 @@ func TestUpdateHandler(t *testing.T) {
 			req := httptest.NewRequest(test.method, test.path, nil)
 			res := httptest.NewRecorder()
 
-			handler.ServeHTTP(res, req)
+			r.ServeHTTP(res, req)
 
 			if res.Code != test.status {
 				t.Errorf("expected status %d, got %d", test.status, res.Code)
