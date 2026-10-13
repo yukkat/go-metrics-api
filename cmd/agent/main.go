@@ -8,19 +8,28 @@ import (
 	"github.com/yukkat/go-metrics-api/internal/agent"
 )
 
-
 func main() {
-    parseFlags()
+	parseFlags()
 
-    host := fmt.Sprintf(`http://%s`, flagRunAddr)
+	host := fmt.Sprintf("http://%s", flagRunAddr)
 
-    client := &http.Client{
-        Timeout: reportInterval,
-    }
-    fmt.Println(host)
+	client := &http.Client{
+		Timeout: 10 * time.Second,
+	}
 
-    for {
-        agent.CollectAndSend(client, host)
-        time.Sleep(pollInterval)
-    }
+	pollTicker := time.NewTicker(time.Duration(flagPollInterval))
+	reportTicker := time.NewTicker(time.Duration(flagReportInterval))
+
+	defer pollTicker.Stop()
+	defer reportTicker.Stop()
+
+	for {
+		select {
+		case <-pollTicker.C:
+			agent.CollectMetrics()
+
+		case <-reportTicker.C:
+			agent.CollectAndSend(client, host)
+		}
+	}
 }
