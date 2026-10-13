@@ -32,6 +32,8 @@ func (h *ValueHandler) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 
 	case "counter":
 		value, ok := h.storage.GetCounter(metricName)
+
+    fmt.Printf("metricName=%q, value=%d, ok=%t\n", metricName, value, ok)
 		if !ok {
 			http.NotFound(res, req)
 			return

@@ -12,7 +12,7 @@ import (
 func main() {
     parseFlags()
 
-    host := fmt.Sprintf(`http://localhost%s`, flagRunAddr)
+    host := fmt.Sprintf(`http://%s`, flagRunAddr)
 
     client := &http.Client{
         Timeout: reportInterval,
