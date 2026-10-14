@@ -6,19 +6,22 @@ import (
 	"time"
 
 	"github.com/yukkat/go-metrics-api/internal/agent"
+	"github.com/yukkat/go-metrics-api/internal/repository"
 )
 
 func main() {
-	parseFlags()
+	config := parseFlags()
 
-	host := fmt.Sprintf("http://%s", flagRunAddr)
+	host := fmt.Sprintf("http://%s", config.flagRunAddr)
 
 	client := &http.Client{
 		Timeout: 10 * time.Second,
 	}
 
-	pollTicker := time.NewTicker(time.Duration(flagPollInterval))
-	reportTicker := time.NewTicker(time.Duration(flagReportInterval))
+	var storage = repository.NewMemStorage()
+
+	pollTicker := time.NewTicker(time.Duration(config.flagPollInterval*int(time.Second)))
+	reportTicker := time.NewTicker(time.Duration(config.flagReportInterval*int(time.Second)))
 
 	defer pollTicker.Stop()
 	defer reportTicker.Stop()
@@ -26,10 +29,10 @@ func main() {
 	for {
 		select {
 		case <-pollTicker.C:
-			agent.CollectMetrics()
+			agent.CollectMetrics(storage)
 
 		case <-reportTicker.C:
-			agent.CollectAndSend(client, host)
+			agent.SendMetric(client, host, storage)
 		}
 	}
 }

@@ -4,6 +4,7 @@ import (
 	"math/rand/v2"
 	"runtime"
 	"github.com/yukkat/go-metrics-api/internal/model"
+	"github.com/yukkat/go-metrics-api/internal/repository"
 )
 
 func gauge(id string, value float64) model.Metrics {
@@ -31,41 +32,39 @@ func getRandomValue() float64 {
     return rand.Float64()
 }
 
-func CollectMetrics() []model.Metrics {
+func CollectMetrics(s *repository.MemStorage) {
     updatePollCount()
     randomValue := getRandomValue()
 	var m runtime.MemStats
 	runtime.ReadMemStats(&m)
 
-	return []model.Metrics{
-		gauge("Alloc", float64(m.Alloc)),
-		gauge("BuckHashSys", float64(m.BuckHashSys)),
-		gauge("Frees", float64(m.Frees)),
-		gauge("GCCPUFraction", m.GCCPUFraction),
-		gauge("GCSys", float64(m.GCSys)),
-		gauge("HeapAlloc", float64(m.HeapAlloc)),
-		gauge("HeapIdle", float64(m.HeapIdle)),
-		gauge("HeapInuse", float64(m.HeapInuse)),
-		gauge("HeapObjects", float64(m.HeapObjects)),
-		gauge("HeapReleased", float64(m.HeapReleased)),
-		gauge("HeapSys", float64(m.HeapSys)),
-		gauge("LastGC", float64(m.LastGC)),
-		gauge("Lookups", float64(m.Lookups)),
-		gauge("MCacheInuse", float64(m.MCacheInuse)),
-		gauge("MCacheSys", float64(m.MCacheSys)),
-		gauge("MSpanInuse", float64(m.MSpanInuse)),
-		gauge("MSpanSys", float64(m.MSpanSys)),
-		gauge("Mallocs", float64(m.Mallocs)),
-		gauge("NextGC", float64(m.NextGC)),
-		gauge("NumForcedGC", float64(m.NumForcedGC)),
-		gauge("NumGC", float64(m.NumGC)),
-		gauge("OtherSys", float64(m.OtherSys)),
-		gauge("PauseTotalNs", float64(m.PauseTotalNs)),
-		gauge("StackInuse", float64(m.StackInuse)),
-		gauge("StackSys", float64(m.StackSys)),
-		gauge("Sys", float64(m.Sys)),
-		gauge("TotalAlloc", float64(m.TotalAlloc)),
-		counter("PollCount", pollCount),
-		gauge("RandomValue", randomValue),
-	}
+		s.SetGauge("Alloc", float64(m.Alloc))
+		s.SetGauge("BuckHashSys", float64(m.BuckHashSys))
+		s.SetGauge("Frees", float64(m.Frees))
+		s.SetGauge("GCCPUFraction", m.GCCPUFraction)
+		s.SetGauge("GCSys", float64(m.GCSys))
+		s.SetGauge("HeapAlloc", float64(m.HeapAlloc))
+		s.SetGauge("HeapIdle", float64(m.HeapIdle))
+		s.SetGauge("HeapInuse", float64(m.HeapInuse))
+		s.SetGauge("HeapObjects", float64(m.HeapObjects))
+		s.SetGauge("HeapReleased", float64(m.HeapReleased))
+		s.SetGauge("HeapSys", float64(m.HeapSys))
+		s.SetGauge("LastGC", float64(m.LastGC))
+		s.SetGauge("Lookups", float64(m.Lookups))
+		s.SetGauge("MCacheInuse", float64(m.MCacheInuse))
+		s.SetGauge("MCacheSys", float64(m.MCacheSys))
+		s.SetGauge("MSpanInuse", float64(m.MSpanInuse))
+		s.SetGauge("MSpanSys", float64(m.MSpanSys))
+		s.SetGauge("Mallocs", float64(m.Mallocs))
+		s.SetGauge("NextGC", float64(m.NextGC))
+		s.SetGauge("NumForcedGC", float64(m.NumForcedGC))
+		s.SetGauge("NumGC", float64(m.NumGC))
+		s.SetGauge("OtherSys", float64(m.OtherSys))
+		s.SetGauge("PauseTotalNs", float64(m.PauseTotalNs))
+		s.SetGauge("StackInuse", float64(m.StackInuse))
+		s.SetGauge("StackSys", float64(m.StackSys))
+		s.SetGauge("Sys", float64(m.Sys))
+		s.SetGauge("TotalAlloc", float64(m.TotalAlloc))
+		s.SetGauge("RandomValue", randomValue)
+		s.AddCounter("PollCount", pollCount)
 }

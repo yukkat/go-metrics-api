@@ -3,58 +3,41 @@ package agent
 import (
 	"testing"
 
-	"github.com/yukkat/go-metrics-api/internal/model"
+	"github.com/yukkat/go-metrics-api/internal/repository"
 )
 
 func TestCollectMetrics(t *testing.T) {
 	pollCount = 0
+	storage := repository.NewMemStorage()
 
-	metrics := CollectMetrics()
+	CollectMetrics(storage)
 
-	if len(metrics) == 0 {
-		t.Error("expected metrics, got empty slice")
+	if _, ok := storage.GetGauge("Alloc"); !ok {
+		t.Error("expected gauge Alloc, not found")
 	}
 
-	var pollMetric model.Metrics
-	var randomMetric model.Metrics
-
-	for _, metric := range metrics {
-		if metric.ID == "PollCount" {
-			pollMetric = metric
-		}
-
-		if metric.ID == "RandomValue" {
-			randomMetric = metric
-		}
+	if _, ok := storage.GetGauge("RandomValue"); !ok {
+		t.Error("expected gauge RandomValue, not found")
 	}
 
-	if pollMetric.Delta == nil {
-		t.Error("PollCount delta is nil")
+	value, ok := storage.GetCounter("PollCount")
+	if !ok {
+		t.Error("expected counter PollCount, not found")
 	}
 
-	if *pollMetric.Delta != 1 {
-		t.Errorf("expected PollCount 1, got %d", *pollMetric.Delta)
-	}
-
-	if randomMetric.Value == nil {
-		t.Error("RandomValue value is nil")
+	if value != 1 {
+		t.Errorf("expected PollCount 1, got %d", value)
 	}
 }
 
 func TestCollectMetricsPollCount(t *testing.T) {
 	pollCount = 0
+	storage := repository.NewMemStorage()
 
-	CollectMetrics()
-	metrics := CollectMetrics()
+	CollectMetrics(storage)
+	CollectMetrics(storage)
 
-	for _, metric := range metrics {
-		if metric.ID == "PollCount" {
-			if *metric.Delta != 2 {
-				t.Errorf("expected PollCount 2, got %d", *metric.Delta)
-			}
-			return
-		}
+	if pollCount != 2 {
+		t.Errorf("expected pollCount 2, got %d", pollCount)
 	}
-
-	t.Error("PollCount metric not found")
 }

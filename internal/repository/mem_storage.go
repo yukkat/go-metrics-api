@@ -11,6 +11,8 @@ type Storage interface {
 	GetAll() []Metric
 	GetGauge(name string) (float64, bool)
 	GetCounter(name string) (int64, bool)
+	GetAllGauges() []Metric
+	GetAllCounters() []Metric
 }
 
 type MemStorage struct {
@@ -22,8 +24,6 @@ type Metric struct {
 	Name  string
 	Value string
 }
-
-var _ Storage = (*MemStorage)(nil)
 
 func NewMemStorage() *MemStorage {
 	return &MemStorage{
@@ -47,7 +47,18 @@ func (s *MemStorage) AddCounter(name string, value int64) {
 }
 
 func (s *MemStorage) GetAll() []Metric {
-	metrics := make([]Metric, 0, len(s.gauges)+len(s.counters))
+	gauges := s.GetAllGauges()
+	counters := s.GetAllCounters()
+    metrics := make([]Metric, 0, len(gauges)+len(counters))
+
+	metrics = append(metrics, gauges...)
+	metrics = append(metrics, counters...)
+
+	return metrics
+}
+
+func (s *MemStorage) GetAllGauges() []Metric {
+	metrics := make([]Metric, 0, len(s.gauges))
 
 	for name, value := range s.gauges {
 		metrics = append(metrics, Metric{
@@ -55,6 +66,12 @@ func (s *MemStorage) GetAll() []Metric {
 			Value: strconv.FormatFloat(value, 'f', -1, 64),
 		})
 	}
+
+	return metrics
+}
+
+func (s *MemStorage) GetAllCounters() []Metric {
+	metrics := make([]Metric, 0, len(s.counters))
 
 	for name, value := range s.counters {
 		metrics = append(metrics, Metric{

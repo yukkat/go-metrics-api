@@ -3,30 +3,45 @@ package agent
 import (
     "fmt"
     "net/http"
-    "strconv"
     "github.com/yukkat/go-metrics-api/internal/model"
+    "github.com/yukkat/go-metrics-api/internal/repository"
 )
 
 func SendMetric(
     client *http.Client,
     serverURL string,
-    metric model.Metrics,
+    storage *repository.MemStorage,
 ) error {
-    var value string
+    counters := storage.GetAllCounters()
+    gauges := storage.GetAllGauges()
 
-    if metric.MType == "gauge" && metric.Value != nil {
-        value = strconv.FormatFloat(*metric.Value, 'f', -1, 64)
-    } else if metric.MType == "counter" && metric.Delta != nil {
-        value = strconv.FormatInt(*metric.Delta, 10)
-    } else {
-        return fmt.Errorf("invalid metric: %+v", metric)
+    for _, m := range gauges {
+       if err := makeRequest(client, serverURL, model.Gauge, m.Name, m.Value); err != nil {
+           return err
+       }
     }
+    for _, n := range counters {
+       if err := makeRequest(client, serverURL, model.Counter, n.Name, n.Value); err != nil {
+           return err
+       }
+    }
+
+    return nil
+}
+
+func makeRequest(
+    client *http.Client,
+    serverURL string,
+    mType string,
+    name string,
+    value string,
+    ) error {
 
     url := fmt.Sprintf(
         "%s/update/%s/%s/%s",
         serverURL,
-        metric.MType,
-        metric.ID,
+        mType,
+        name,
         value,
     )
 

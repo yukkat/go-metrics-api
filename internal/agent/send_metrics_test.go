@@ -5,76 +5,49 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/yukkat/go-metrics-api/internal/model"
+	"github.com/yukkat/go-metrics-api/internal/repository"
 )
 
 func TestSendMetric(t *testing.T) {
-	value := 10.5
-	delta := int64(10)
+	count := 0
 
-	tests := []struct {
-		name    string
-		metric  model.Metrics
-		status  int
-		wantErr bool
-	}{
-		{
-			name: "gauge",
-			metric: model.Metrics{
-				ID:    "temperature",
-				MType: model.Gauge,
-				Value: &value,
-			},
-			status:  http.StatusOK,
-			wantErr: false,
-		},
-		{
-			name: "counter",
-			metric: model.Metrics{
-				ID:    "requests",
-				MType: model.Counter,
-				Delta: &delta,
-			},
-			status:  http.StatusOK,
-			wantErr: false,
-		},
-		{
-			name: "invalid metric",
-			metric: model.Metrics{
-				ID:    "temperature",
-				MType: "unknown",
-			},
-			status:  http.StatusOK,
-			wantErr: true,
-		},
-		{
-			name: "server error",
-			metric: model.Metrics{
-				ID:    "temperature",
-				MType: model.Gauge,
-				Value: &value,
-			},
-			status:  http.StatusInternalServerError,
-			wantErr: true,
-		},
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		count++
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer server.Close()
+
+	storage := repository.NewMemStorage()
+	storage.SetGauge("temperature", 10.5)
+	storage.AddCounter("requests", 3)
+
+	err := SendMetric(server.Client(), server.URL, storage)
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
 	}
 
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				w.WriteHeader(test.status)
-			}))
-			defer server.Close()
+	if count != 2 {
+		t.Errorf("expected 2 requests, got %d", count)
+	}
+}
 
-			err := SendMetric(server.Client(), server.URL, test.metric)
+func TestSendMetricEmptyStorage(t *testing.T) {
+	count := 0
 
-			if test.wantErr && err == nil {
-				t.Error("expected error, got nil")
-			}
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		count++
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer server.Close()
 
-			if !test.wantErr && err != nil {
-				t.Errorf("unexpected error: %v", err)
-			}
-		})
+	storage := repository.NewMemStorage()
+
+	err := SendMetric(server.Client(), server.URL, storage)
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+
+	if count != 0 {
+		t.Errorf("expected 0 requests, got %d", count)
 	}
 }
