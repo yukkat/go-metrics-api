@@ -2,6 +2,9 @@ package main
 
 import (
     "flag"
+    "os"
+    "strconv"
+    "fmt"
 )
 
 type Config struct {
@@ -25,6 +28,7 @@ func parseFlags() Config {
         flagPollInterval: defConfig.flagPollInterval,
         flagReportInterval: defConfig.flagReportInterval,
     }
+
     // регистрируем переменную flagRunAddr
     // как аргумент -a со значением :8080 по умолчанию
     flag.StringVar(&config.flagRunAddr, "a", defConfig.flagRunAddr, "address and port to run server")
@@ -33,5 +37,33 @@ func parseFlags() Config {
     // парсим переданные серверу аргументы в зарегистрированные переменные
     flag.Parse()
 
+    var _ = readEnvs(&config);
+
     return config;
+}
+
+func readEnvs(c *Config) error {
+        // для случаев, когда в переменной окружения ADDRESS присутствует непустое значение,
+        // переопределим адрес запуска сервера,
+        // даже если он был передан через аргумент командной строки
+        if envRunAddr := os.Getenv("ADDRESS"); envRunAddr != "" {
+            c.flagRunAddr = envRunAddr
+        }
+        if reportInterval := os.Getenv("REPORT_INTERVAL"); reportInterval != "" {
+            value, err := strconv.Atoi(reportInterval)
+            if err != nil {
+                return fmt.Errorf("invalid REPORT_INTERVAL %q: %w", reportInterval, err)
+            }
+
+            c.flagReportInterval = value
+        }
+        if pollInterval := os.Getenv("POLL_INTERVAL"); pollInterval != "" {
+            value, err := strconv.Atoi(pollInterval)
+            if err != nil {
+                return fmt.Errorf("invalid POLL_INTERVAL %q: %w", pollInterval, err)
+            }
+
+            c.flagPollInterval = value
+        }
+        return nil
 }
