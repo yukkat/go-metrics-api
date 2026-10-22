@@ -5,8 +5,11 @@ import (
 	"net/http"
 	"time"
 
+    "go.uber.org/zap"
+
 	"github.com/yukkat/go-metrics-api/internal/agent"
 	"github.com/yukkat/go-metrics-api/internal/repository"
+	"github.com/yukkat/go-metrics-api/internal/logger"
 )
 
 func main() {
@@ -17,6 +20,12 @@ func main() {
 	client := &http.Client{
 		Timeout: 10 * time.Second,
 	}
+
+	if err := logger.Initialize(config.flagLogLevel); err != nil {
+        panic(err)
+    }
+
+    logger.Log.Info("Running server", zap.String("address", config.flagRunAddr))
 
 	var storage = repository.NewMemStorage()
 
