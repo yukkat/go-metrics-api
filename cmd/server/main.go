@@ -14,6 +14,7 @@ func newServer() http.Handler {
 	updateHandler := handler.NewUpdateHandler(storage)
 	updateHandlerJSON := handler.NewUpdateHandlerJSON(storage)
 	valueHandler := handler.NewValueHandler(storage)
+	valueHandlerJSON := handler.NewValueHandlerJSON(storage)
 	allMetricsHandler := handler.NewAllMetricsHandler(storage)
 
 	r := chi.NewRouter()
@@ -24,6 +25,7 @@ func newServer() http.Handler {
 	r.Post("/update/{type}/{name}/{value}", updateHandler.ServeHTTP)
 	r.Post("/update", updateHandlerJSON.ServeHTTP)
 	r.Get("/value/{type}/{name}", valueHandler.ServeHTTP)
+	r.Post("/value", valueHandlerJSON.ServeHTTP)
 
 	return r
 }
