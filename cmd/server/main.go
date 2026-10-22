@@ -12,6 +12,7 @@ import (
 func newServer() http.Handler {
 	storage := repository.NewMemStorage()
 	updateHandler := handler.NewUpdateHandler(storage)
+	updateHandlerJSON := handler.NewUpdateHandlerJSON(storage)
 	valueHandler := handler.NewValueHandler(storage)
 	allMetricsHandler := handler.NewAllMetricsHandler(storage)
 
@@ -21,6 +22,7 @@ func newServer() http.Handler {
 
 	r.Get("/", allMetricsHandler.ServeHTTP)
 	r.Post("/update/{type}/{name}/{value}", updateHandler.ServeHTTP)
+	r.Post("/update", updateHandlerJSON.ServeHTTP)
 	r.Get("/value/{type}/{name}", valueHandler.ServeHTTP)
 
 	return r
