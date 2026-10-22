@@ -4,6 +4,7 @@ import (
     "github.com/yukkat/go-metrics-api/internal/repository"
     "net/http"
     "fmt"
+    "strconv"
     "github.com/go-chi/chi/v5"
 )
 
@@ -28,7 +29,7 @@ func (h *ValueHandler) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 		}
 
 		res.WriteHeader(http.StatusOK)
-		fmt.Fprint(res, value)
+		fmt.Fprint(res, strconv.FormatFloat(value, 'f', -1, 64))
 
 	case "counter":
 		value, ok := h.storage.GetCounter(metricName)
@@ -40,7 +41,7 @@ func (h *ValueHandler) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 		}
 
 		res.WriteHeader(http.StatusOK)
-		fmt.Fprint(res, value)
+		fmt.Fprintf(res, "%d", value)
 
 	default:
 		http.NotFound(res, req)
