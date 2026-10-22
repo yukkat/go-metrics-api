@@ -25,7 +25,7 @@ func main() {
         panic(err)
     }
 
-    logger.Log.Info("Running server", zap.String("address", config.flagRunAddr))
+    logger.Log.Info("Running agent", zap.String("address", config.flagRunAddr))
 
 	var storage = repository.NewMemStorage()
 
@@ -41,7 +41,9 @@ func main() {
 			agent.CollectMetrics(storage)
 
 		case <-reportTicker.C:
-			agent.SendMetric(client, host, storage)
+			if err := agent.SendMetricJSON(client, host, storage); err != nil {
+				logger.Log.Error("failed to send metrics", zap.Error(err))
+			}
 		}
 	}
 }

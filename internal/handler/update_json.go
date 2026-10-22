@@ -43,6 +43,10 @@ func (h *UpdateHandlerJSON) ServeHTTP(w http.ResponseWriter, r *http.Request) {
                 http.Error(w, "invalid counter value", http.StatusBadRequest)
                 return
             }
+            logger.Log.Debug("updating counter",
+                zap.String("id", req.ID),
+                zap.Int64("delta", *req.Delta),
+            )
 
             h.storage.AddCounter(req.ID, *req.Delta)
 
@@ -53,4 +57,5 @@ func (h *UpdateHandlerJSON) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write([]byte("{}"))
 }

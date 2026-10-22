@@ -23,8 +23,10 @@ func newServer() http.Handler {
 
 	r.Get("/", allMetricsHandler.ServeHTTP)
 	r.Post("/update/{type}/{name}/{value}", updateHandler.ServeHTTP)
+	r.Post("/update/", updateHandlerJSON.ServeHTTP)
 	r.Post("/update", updateHandlerJSON.ServeHTTP)
 	r.Get("/value/{type}/{name}", valueHandler.ServeHTTP)
+	r.Post("/value/", valueHandlerJSON.ServeHTTP)
 	r.Post("/value", valueHandlerJSON.ServeHTTP)
 
 	return r
