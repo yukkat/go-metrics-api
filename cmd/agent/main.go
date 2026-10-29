@@ -5,11 +5,12 @@ import (
 	"net/http"
 	"time"
 
-    "go.uber.org/zap"
+	"go.uber.org/zap"
 
 	"github.com/yukkat/go-metrics-api/internal/agent"
-	"github.com/yukkat/go-metrics-api/internal/repository"
 	"github.com/yukkat/go-metrics-api/internal/logger"
+	"github.com/yukkat/go-metrics-api/internal/middleware"
+	"github.com/yukkat/go-metrics-api/internal/repository"
 )
 
 func main() {
@@ -18,19 +19,20 @@ func main() {
 	host := fmt.Sprintf("http://%s", config.flagRunAddr)
 
 	client := &http.Client{
-		Timeout: 10 * time.Second,
+		Timeout:   10 * time.Second,
+		Transport: &middleware.GzipTransport{Transport: http.DefaultTransport},
 	}
 
 	if err := logger.Initialize(config.flagLogLevel); err != nil {
-        panic(err)
-    }
+		panic(err)
+	}
 
-    logger.Log.Info("Running agent", zap.String("address", config.flagRunAddr))
+	logger.Log.Info("Running agent", zap.String("address", config.flagRunAddr))
 
 	var storage = repository.NewMemStorage()
 
-	pollTicker := time.NewTicker(time.Duration(config.flagPollInterval*int(time.Second)))
-	reportTicker := time.NewTicker(time.Duration(config.flagReportInterval*int(time.Second)))
+	pollTicker := time.NewTicker(time.Duration(config.flagPollInterval * int(time.Second)))
+	reportTicker := time.NewTicker(time.Duration(config.flagReportInterval * int(time.Second)))
 
 	defer pollTicker.Stop()
 	defer reportTicker.Stop()

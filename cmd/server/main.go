@@ -6,6 +6,7 @@ import (
 	"github.com/yukkat/go-metrics-api/internal/handler"
 	"github.com/yukkat/go-metrics-api/internal/logger"
 	"github.com/yukkat/go-metrics-api/internal/repository"
+	"github.com/yukkat/go-metrics-api/internal/middleware"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -20,6 +21,7 @@ func newServer() http.Handler {
 	r := chi.NewRouter()
 
 	r.Use(logger.Handle)
+	r.Use(middleware.GzipMiddleware)
 
 	r.Get("/", allMetricsHandler.ServeHTTP)
 	r.Post("/update/{type}/{name}/{value}", updateHandler.ServeHTTP)
