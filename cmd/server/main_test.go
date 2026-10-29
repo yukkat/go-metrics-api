@@ -1,8 +1,11 @@
 package main
 
 import (
+	"bytes"
+	"compress/gzip"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 )
 
@@ -37,5 +40,38 @@ func TestServer(t *testing.T) {
 				t.Errorf("expected status %d, got %d", test.status, res.Code)
 			}
 		})
+	}
+}
+
+func TestServerAcceptsGzip(t *testing.T) {
+	server := newServer()
+
+	var compressed bytes.Buffer
+	zw := gzip.NewWriter(&compressed)
+	if _, err := zw.Write([]byte(`{"id":"temperature","type":"gauge","value":25.5}`)); err != nil {
+		t.Fatalf("cannot compress body: %v", err)
+	}
+	if err := zw.Close(); err != nil {
+		t.Fatalf("cannot close gzip writer: %v", err)
+	}
+
+	req := httptest.NewRequest(http.MethodPost, "/update", &compressed)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Content-Encoding", "gzip")
+	res := httptest.NewRecorder()
+
+	server.ServeHTTP(res, req)
+
+	if res.Code != http.StatusOK {
+		t.Fatalf("expected status %d, got %d", http.StatusOK, res.Code)
+	}
+
+	getReq := httptest.NewRequest(http.MethodGet, "/value/gauge/temperature", nil)
+	getRes := httptest.NewRecorder()
+
+	server.ServeHTTP(getRes, getReq)
+
+	if strings.TrimSpace(getRes.Body.String()) != "25.5" {
+		t.Errorf("expected value 25.5, got %q", getRes.Body.String())
 	}
 }
