@@ -12,6 +12,7 @@ import (
 
 func TestGzipMiddlewareCompressesResponse(t *testing.T) {
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
 		_, _ = w.Write([]byte("hello gzip"))
 	})
 
@@ -157,6 +158,7 @@ func TestGzipMiddlewareFlushes(t *testing.T) {
 
 func TestGzipMiddlewareReadFrom(t *testing.T) {
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
 		_, _ = io.Copy(w, strings.NewReader("hello gzip"))
 	})
 
