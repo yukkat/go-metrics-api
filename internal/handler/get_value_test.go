@@ -83,3 +83,22 @@ func TestValueHandlerBody(t *testing.T) {
 		t.Errorf("expected body 25.5, got %q", res.Body.String())
 	}
 }
+
+func TestValueHandlerBodyWithoutFraction(t *testing.T) {
+	storage := repository.NewMemStorage()
+	storage.SetGauge("LastGC", 1744184459)
+
+	handler := NewValueHandler(storage)
+
+	r := chi.NewRouter()
+	r.Get("/value/{type}/{name}", handler.ServeHTTP)
+
+	req := httptest.NewRequest(http.MethodGet, "/value/gauge/LastGC", nil)
+	res := httptest.NewRecorder()
+
+	r.ServeHTTP(res, req)
+
+	if res.Body.String() != "1744184459" {
+		t.Errorf("expected body 1744184459, got %q", res.Body.String())
+	}
+}
