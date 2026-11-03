@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"net/http"
 	"time"
 
@@ -40,7 +41,12 @@ func newServerWithStorage(storage *repository.MemStorage) http.Handler {
 	return r
 }
 
-func startSaveTicker(storage *repository.MemStorage, path string, interval int) {
+func startSaveTicker(
+	ctx context.Context,
+	storage *repository.MemStorage,
+	path string,
+	interval int,
+) {
 	if path == "" || interval <= 0 {
 		return
 	}
@@ -66,6 +72,8 @@ func main() {
 	}
 
 	storage := repository.NewMemStorage()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
 	if flagRestore && flagFileStoragePath != "" {
 		if err := storage.LoadFromFile(flagFileStoragePath); err != nil {
@@ -76,7 +84,7 @@ func main() {
 	if flagStoreInterval <= 0 {
 		storage.ConfigureFileStorage(flagFileStoragePath, true)
 	} else {
-		startSaveTicker(storage, flagFileStoragePath, flagStoreInterval)
+		startSaveTicker(ctx, storage, flagFileStoragePath, flagStoreInterval)
 	}
 
 	server := newServerWithStorage(storage)

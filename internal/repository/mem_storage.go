@@ -6,7 +6,9 @@ import (
 	"strconv"
 	"sync"
 
+	"github.com/yukkat/go-metrics-api/internal/logger"
 	"github.com/yukkat/go-metrics-api/internal/model"
+	"go.uber.org/zap"
 )
 
 type Storage interface {
@@ -142,7 +144,6 @@ func (s *MemStorage) SaveToFile(path string) error {
 	metrics := make([]model.Metrics, 0, len(s.gauges)+len(s.counters))
 
 	for name, value := range s.gauges {
-		value := value
 		metrics = append(metrics, model.Metrics{
 			ID:    name,
 			MType: model.Gauge,
@@ -151,7 +152,6 @@ func (s *MemStorage) SaveToFile(path string) error {
 	}
 
 	for name, value := range s.counters {
-		value := value
 		metrics = append(metrics, model.Metrics{
 			ID:    name,
 			MType: model.Counter,
@@ -213,6 +213,8 @@ func (s *MemStorage) saveAfterUpdate() {
 	s.mu.RUnlock()
 
 	if syncSave && path != "" {
-		_ = s.SaveToFile(path)
+		if err := s.SaveToFile(path); err != nil {
+		    logger.Log.Error("failed saving to file", zap.Error(err))
+		}
 	}
 }

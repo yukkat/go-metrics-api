@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+
+	"github.com/yukkat/go-metrics-api/internal/logger"
+	"go.uber.org/zap"
 )
 
 type Config struct {
@@ -40,7 +43,9 @@ func parseFlags() Config {
 	// парсим переданные серверу аргументы в зарегистрированные переменные
 	flag.Parse()
 
-	var _ = readEnvs(&config)
+	if err := readEnvs(&config); err != nil {
+	    logger.Log.Error("failed to read envs", zap.Error(err))
+	}
 
 	return config
 }
