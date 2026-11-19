@@ -3,7 +3,6 @@ package handler
 import (
 	"net/http"
 	"strconv"
-    "fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/yukkat/go-metrics-api/internal/repository"
 )
@@ -25,7 +24,6 @@ func (h *UpdateHandler) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 	metricType := chi.URLParam(req, "type")
 	name := chi.URLParam(req, "name")
 	rawValue := chi.URLParam(req, "value")
-	fmt.Println(metricType, name, rawValue)
 
 	switch metricType {
 	case gaugeType:
