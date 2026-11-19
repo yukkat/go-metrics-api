@@ -3,10 +3,14 @@ package main
 import (
 	"bytes"
 	"compress/gzip"
+	"database/sql"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/yukkat/go-metrics-api/internal/repository"
+	_ "modernc.org/sqlite"
 )
 
 func TestServer(t *testing.T) {
@@ -73,5 +77,56 @@ func TestServerAcceptsGzip(t *testing.T) {
 
 	if strings.TrimSpace(getRes.Body.String()) != "25.5" {
 		t.Errorf("expected value 25.5, got %q", getRes.Body.String())
+	}
+}
+
+func TestServerPing(t *testing.T) {
+	db, err := sql.Open("sqlite", ":memory:")
+	if err != nil {
+		t.Fatalf("cannot open database: %v", err)
+	}
+	defer db.Close()
+
+	closedDB, err := sql.Open("sqlite", ":memory:")
+	if err != nil {
+		t.Fatalf("cannot open database: %v", err)
+	}
+	if err := closedDB.Close(); err != nil {
+		t.Fatalf("cannot close database: %v", err)
+	}
+
+	tests := []struct {
+		name   string
+		db     *sql.DB
+		status int
+	}{
+		{
+			name:   "no database",
+			status: http.StatusInternalServerError,
+		},
+		{
+			name:   "database is available",
+			db:     db,
+			status: http.StatusOK,
+		},
+		{
+			name:   "database is closed",
+			db:     closedDB,
+			status: http.StatusInternalServerError,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			server := newServerWithStorage(repository.NewMemStorage(), test.db)
+			req := httptest.NewRequest(http.MethodGet, "/ping", nil)
+			res := httptest.NewRecorder()
+
+			server.ServeHTTP(res, req)
+
+			if res.Code != test.status {
+				t.Errorf("expected status %d, got %d", test.status, res.Code)
+			}
+		})
 	}
 }
