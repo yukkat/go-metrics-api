@@ -1,0 +1,9 @@
+CREATE TABLE gauges (
+    name TEXT PRIMARY KEY,
+    value DOUBLE PRECISION NOT NULL
+);
+
+CREATE TABLE counters (
+    name TEXT PRIMARY KEY,
+    value BIGINT NOT NULL
+);

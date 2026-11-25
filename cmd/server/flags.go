@@ -10,7 +10,7 @@ const (
 	defaultRunAddr         = "localhost:8080"
 	defaultLogLevel        = "info"
 	defaultStoreInterval   = 300
-	defaultFileStoragePath = "metrics-storage.json"
+	defaultFileStoragePath = ""
 	defaultRestore         = false
 	defaultDatabaseDSN     = ""
 )
