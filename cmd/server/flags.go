@@ -10,8 +10,9 @@ const (
 	defaultRunAddr         = "localhost:8080"
 	defaultLogLevel        = "info"
 	defaultStoreInterval   = 300
-	defaultFileStoragePath = "metrics-storage.json"
+	defaultFileStoragePath = ""
 	defaultRestore         = false
+	defaultDatabaseDSN     = ""
 )
 
 // неэкспортированная переменная flagRunAddr содержит адрес и порт для запуска сервера
@@ -21,6 +22,7 @@ var (
 	flagStoreInterval   int
 	flagFileStoragePath string
 	flagRestore         bool
+	flagDatabaseDSN     string
 )
 
 // parseFlags обрабатывает аргументы командной строки
@@ -33,6 +35,7 @@ func parseFlags() {
 	flag.IntVar(&flagStoreInterval, "i", defaultStoreInterval, "interval in seconds to save metrics to file (0 means synchronous saving)")
 	flag.StringVar(&flagFileStoragePath, "f", defaultFileStoragePath, "path to file with saved metrics")
 	flag.BoolVar(&flagRestore, "r", defaultRestore, "load saved metrics from file on startup")
+	flag.StringVar(&flagDatabaseDSN, "d", defaultDatabaseDSN, "database connection string")
 	// парсим переданные серверу аргументы в зарегистрированные переменные
 	flag.Parse()
 
@@ -59,5 +62,8 @@ func parseFlags() {
 		if err == nil {
 			flagRestore = value
 		}
+	}
+	if envDatabaseDSN := os.Getenv("DATABASE_DSN"); envDatabaseDSN != "" {
+		flagDatabaseDSN = envDatabaseDSN
 	}
 }
